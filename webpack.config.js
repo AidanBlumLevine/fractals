@@ -9,7 +9,7 @@ module.exports = {
     },
     module: {
         rules: [{
-            test: /\.(vs|vert|frag)$/i,
+            test: /\.(vs|fs)$/i,
             use: 'raw-loader',
         }]
     }
