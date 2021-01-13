@@ -5,7 +5,6 @@ import { vec3 } from 'gl-matrix';
 var lastX, lastY, mouseDown = false;
 var yawAngle = 0, pitchAngle = 0;
 var playerPos = vec3.fromValues(0, 0, -2);
-var zoom = 2;
 var time = 0;
 var move = [0, 0, 0];
 var speed = 3.5;
@@ -72,14 +71,14 @@ canvas.onmousemove = function (event) {
     if (mouseDown) {
         yawAngle += (x - lastX) / canvas.width * 400;
         pitchAngle += (y - lastY) / canvas.height * 400;
-        pitchAngle = Math.max(Math.min(pitchAngle, 89.9), -89.9);
+        pitchAngle = Math.max(Math.min(pitchAngle, 89.999), -89.999);
     }
     lastX = x;
     lastY = y;
 }
 canvas.onmousewheel = function (event) {
-    zoom = zoom - event.wheelDelta / 1000;
-    zoom = Math.max(Math.min(zoom, 10), .5);
+    speed = speed + event.wheelDelta / 1000;
+    speed = Math.max(Math.min(speed, 10), .025);
 }
 window.addEventListener("keydown", onKeyDown, false);
 window.addEventListener("keyup", onKeyUp, false);
