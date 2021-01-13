@@ -19,7 +19,7 @@ vec2 DE(vec3 p)
 	float d = sdBox(p, vec3(1.0));
 	int cuts = 0;
 	float s = 2.67;
-	for(int m = 0; m < 15; m ++ )
+	for(int m = 0; m < 13; m ++ )
 	{
 		vec3 a = mod(p * s, 2.0) - 1.0;
 		s *= 3.0;

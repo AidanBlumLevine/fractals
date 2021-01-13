@@ -7,7 +7,7 @@ var yawAngle = 0, pitchAngle = 0;
 var playerPos = vec3.fromValues(0, 0, -2);
 var time = 0;
 var move = [0, 0, 0];
-var speed = 3.5;
+var speed = 3;
 
 var canvas = document.getElementById("canvas");
 canvas.width = canvas.clientWidth;
@@ -76,10 +76,17 @@ canvas.onmousemove = function (event) {
     lastX = x;
     lastY = y;
 }
+
+var speed_range = document.getElementById("speed");
 canvas.onmousewheel = function (event) {
-    speed = speed + event.wheelDelta / 1000;
-    speed = Math.max(Math.min(speed, 10), .025);
+    speed += Math.sign(event.wheelDelta);
+    speed = Math.max(Math.min(speed, 20), -40);
+    speed_range.value = Math.round(speed);
 }
+speed_range.addEventListener('input', function () {
+    speed = parseInt(speed_range.value);
+});
+
 window.addEventListener("keydown", onKeyDown, false);
 window.addEventListener("keyup", onKeyUp, false);
 
@@ -134,9 +141,10 @@ function movement(deltaTime) {
 
 
     var rightMove = vec3.create();
-    vec3.scale(rightMove, right, move[0] * deltaTime * speed);
+    var rSpeed = Math.pow(10, speed / 10);
+    vec3.scale(rightMove, right, move[0] * deltaTime * rSpeed);
     var fwdMove = vec3.create();
-    vec3.scale(fwdMove, fwd, move[2] * deltaTime * speed);
+    vec3.scale(fwdMove, fwd, move[2] * deltaTime * rSpeed);
     vec3.add(playerPos, playerPos, rightMove);
     vec3.add(playerPos, playerPos, fwdMove);
 
@@ -145,6 +153,8 @@ function movement(deltaTime) {
     gl.uniform3f(playerFwd_location, fwd[0], fwd[1], fwd[2]);
     gl.uniform3f(playerPos_location, playerPos[0], playerPos[1], playerPos[2]);
 }
+
+
 
 var start = Date.now();
 var lastFrame = start;
@@ -156,7 +166,7 @@ function render() {
     movement(elapsed / 1000);
 
     gl.drawArrays(gl.TRIANGLES, 0, 6);
-    
+
     requestAnimationFrame(render, canvas);
 }
 render();
