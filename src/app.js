@@ -87,16 +87,16 @@ function onKeyDown(event) {
     var keyCode = event.keyCode;
     switch (keyCode) {
         case 68: //d
-            move[0] = speed;
+            move[0] = 1;
             break;
         case 83: //s
-            move[2] = -speed;
+            move[2] = -1;
             break;
         case 65: //a
-            move[0] = -speed;
+            move[0] = -1;
             break;
         case 87: //w
-            move[2] = speed;
+            move[2] = 1;
             break;
     }
 }
@@ -134,9 +134,9 @@ function movement(deltaTime) {
 
 
     var rightMove = vec3.create();
-    vec3.scale(rightMove, right, move[0] * deltaTime);
+    vec3.scale(rightMove, right, move[0] * deltaTime * speed);
     var fwdMove = vec3.create();
-    vec3.scale(fwdMove, fwd, move[2] * deltaTime);
+    vec3.scale(fwdMove, fwd, move[2] * deltaTime * speed);
     vec3.add(playerPos, playerPos, rightMove);
     vec3.add(playerPos, playerPos, fwdMove);
 

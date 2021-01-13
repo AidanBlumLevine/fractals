@@ -66,9 +66,9 @@ vec3 colorRamp(float c)
 	float f = 2.0 * c - 1.0;
 	if (c < 0.5) {
 		f = 2.0 * c;
-		return (1.0 - f) * vec3(.843, 0.098, 0.1098) + f * vec3(.996,.988,.737);
+		return (1.0 - f) * vec3(0.843, 0.098, 0.1098) + f * vec3(0.996, 0.988, 0.737);
 	}
-	return (1.0 - f) * vec3(.996,.988,.737) + f * vec3(.192,.529,.721);
+	return (1.0 - f) * vec3(0.996, 0.988, 0.737) + f * vec3(0.192, 0.529, 0.721);
 }
 
 vec3 calcNormal(vec3 p, float e) {
@@ -85,23 +85,63 @@ vec3 calcNormal(vec3 p, float e) {
 		vec3 rayData = intersect(ro, rd, 1024.0);
 		float dist = rayData.x;
 		
-		vec3 skyColor = vec3(0.91, 0.91, 0.76);
-		vec3 solidColor = pow(colorRamp(rayData.z / 15.0),vec3(1.5));
+		// vec3 skyColor = vec3(0.91, 0.91, 0.76);
+		// vec3 solidColor = pow(colorRamp(rayData.z / 15.0), vec3(1.5));
+		// if (rayData.z < 0.0) {
+		// 	solidColor = skyColor;
+		// }
+		
+		// vec3 normal = calcNormal(ro + dist * rd, 0.0001 * dist);
+		
+		// float distOcclusion = rayData.y * 2.0 / 256.0; //hacky occlusion, more occlusion means higher number
+		// vec3 reflectDir = reflect(-light, normal);
+		// float specular = pow(max(dot(playerFwd, reflectDir), 0.0), 32.0);
+		// float diffuseLighting = 1.0 - clamp(dot(light, normal), 0.0, 1.0);
+		
+		// float combinedShading = diffuseLighting * 0.4 + distOcclusion * 0.2 + specular * 0.15 + 0.3;
+		// float fogStrength = 1.0 - exp(-dist * 0.01);
+		
+		// return solidColor * combinedShading * (1.0 - fogStrength) + skyColor * fogStrength;
+		
+		// float colorInvert = 1.0; // can be turned to zero, dont forget to switch minus signs then!
+		
+						
+		//colors
+		vec3 skyColor = vec3(0.1); //vec3(0.56, 0.74, 0.53)*0.75;
+		vec3 solidColor = 1.0-pow(colorRamp(rayData.z / 15.0), vec3(1.5));
+		vec3 col;
 		if (rayData.z < 0.0) {
-			solidColor = skyColor;
+		 	solidColor = skyColor;
+		}
+		if (dist > 1024.0)
+		{
+			col = skyColor;
+		}
+		else
+		{
+			vec3 normal = calcNormal(ro + dist*rd,0.0001 * dist);
+			
+			float distOcclusion = 1.0 - rayData.y * 2.0 / 256.0;
+			float diffLighting = clamp(dot(light, normal), 0.0, 1.0);
+			
+			//inverted specular lighting, darkens the reflections, which lightens after inversion
+			float specLighting = 1.0 - pow(clamp(dot(normal, normalize(light - rd)), 0.0, 1.0), 32.0);
+			
+			float combinedShading = diffLighting * 0.35 + distOcclusion * 0.4 + specLighting * 0.15 + 0.1;
+			
+			col = solidColor * combinedShading;
+			
+			//apply fog
+			float fogStrength = exp(-dist * 0.01);
+			col = skyColor * (1.0 - fogStrength) + col * fogStrength;
+			
 		}
 		
-		vec3 normal = calcNormal(ro + dist * rd, 0.0001 * dist);
+		//inverting colors and contrast enhancing
+		col = vec3(1.0) - col;
+		col = pow(col,vec3(1.5));
 		
-		float distOcclusion = rayData.y * 2.0 / 256.0; //hacky occlusion, more occlusion means higher number
-		vec3 reflectDir = reflect(-light, normal);
-		float specular = pow(max(dot(playerFwd, reflectDir), 0.0), 32.0);
-		float diffuseLighting = 1.0 - clamp(dot(light, normal), 0.0, 1.0);
-		
-		float combinedShading = diffuseLighting * 0.4 + distOcclusion * 0.2 + specular * 0.15 + 0.3;
-		float fogStrength = 1.0 - exp(-dist * 0.01);
-		
-		return solidColor * combinedShading * (1.0 - fogStrength) + skyColor * fogStrength;
+		return col;
 	}
 	
 	void main(void)
