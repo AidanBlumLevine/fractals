@@ -19,7 +19,7 @@ float DE(vec3 p)
 	float d = sdBox(p, vec3(1.0));
 	
 	float s = 2.67;
-	for(int m = 0; m < 8; m ++ )
+	for(int m = 0; m < 11; m ++ )
 	{
 		vec3 a = mod(p * s, 2.0) - 1.0;
 		s *= 3.0;
@@ -42,11 +42,10 @@ float map(in vec3 rayP)
 	return DE(rayP / Scale) * Scale;
 }
 
-vec2 interesct(in vec3 ro, in vec3 rd, in float tmax)
+vec2 intersect(in vec3 ro, in vec3 rd, in float tmax)
 {
 	float t = 0.0;
-	float i = 0.0;
-	for(i = 0.0; i < 128.0; i ++ )
+	for(float i = 0.0; i < 128.0; i ++ )
 	{
 		vec3 rayP = ro + t*rd;
 		float d = map(rayP);
@@ -54,7 +53,7 @@ vec2 interesct(in vec3 ro, in vec3 rd, in float tmax)
 		t += d;
 	}
 	
-	return vec2(t, i);
+	return vec2(t, 0); //i
 }
 
 vec3 calcNormal(vec3 p) {
@@ -77,7 +76,7 @@ vec3 calcNormal(vec3 p) {
 		float tmax = 1024.0;
 		
 		vec3 col;
-		vec2 rayData = interesct(ro, rd, tmax);
+		vec2 rayData = intersect(ro, rd, tmax);
 		float t = rayData.x;
 		
 		//colors

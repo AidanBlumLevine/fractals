@@ -1,13 +1,14 @@
 import vert from './generalVert.vs';
-import frag from './testFrag.fs';
-import { mat4 } from 'gl-matrix';
+import frag from './foggyFrag.fs';
+import { vec3 } from 'gl-matrix';
 
 var lastX, lastY, mouseDown = false;
 var yawAngle = 0, pitchAngle = 0;
-var rotMatrix = mat4.create();
-var _Matrix = mat4.create();
+var playerPos = vec3.fromValues(0, 0, -2);
 var zoom = 2;
 var time = 0;
+var move = [0, 0, 0];
+var speed = 3.5;
 
 var canvas = document.getElementById("canvas");
 canvas.width = canvas.clientWidth;
@@ -33,8 +34,10 @@ gl.useProgram(program);
 var screen_ratio_location = gl.getUniformLocation(program, "screen_ratio");
 var position_location = gl.getAttribLocation(program, "position");
 var resolution_location = gl.getUniformLocation(program, "resolution");
-var camera_rotation = gl.getUniformLocation(program, "camera_rotation");
-var zoom_location = gl.getUniformLocation(program, "zoom");
+var playerPos_location = gl.getUniformLocation(program, "playerPos");
+var playerFwd_location = gl.getUniformLocation(program, "playerFwd");
+var playerUp_location = gl.getUniformLocation(program, "playerUp");
+var playerRight_location = gl.getUniformLocation(program, "playerRight");
 var time_location = gl.getUniformLocation(program, "time");
 gl.uniform2f(resolution_location, canvas.width, canvas.height);
 var mx = Math.max(canvas.width, canvas.height);
@@ -68,26 +71,93 @@ canvas.onmousemove = function (event) {
     var y = event.clientY;
     if (mouseDown) {
         yawAngle += (x - lastX) / canvas.width * 400;
-        //yawAngle = Math.max(Math.min(yawAngle, maxYawAngle), minYawAngle); 
         pitchAngle += (y - lastY) / canvas.height * 400;
         pitchAngle = Math.max(Math.min(pitchAngle, 89.9), -89.9);
-        mat4.rotate(rotMatrix, _Matrix, degToRad(-yawAngle), [0, 1, 0]);
-
-        mat4.rotate(rotMatrix, rotMatrix, degToRad(-pitchAngle), [0, 0, 1]);
     }
     lastX = x;
     lastY = y;
 }
-canvas.onmousewheel = function (event){
-    zoom = zoom - event.wheelDelta/1000;
+canvas.onmousewheel = function (event) {
+    zoom = zoom - event.wheelDelta / 1000;
     zoom = Math.max(Math.min(zoom, 10), .5);
 }
+window.addEventListener("keydown", onKeyDown, false);
+window.addEventListener("keyup", onKeyUp, false);
+
+function onKeyDown(event) {
+    var keyCode = event.keyCode;
+    switch (keyCode) {
+        case 68: //d
+            move[0] = speed;
+            break;
+        case 83: //s
+            move[2] = -speed;
+            break;
+        case 65: //a
+            move[0] = -speed;
+            break;
+        case 87: //w
+            move[2] = speed;
+            break;
+    }
+}
+
+function onKeyUp(event) {
+    var keyCode = event.keyCode;
+
+    switch (keyCode) {
+        case 68: //d
+            move[0] = 0;
+            break;
+        case 83: //s
+            move[2] = 0;
+            break;
+        case 65: //a
+            move[0] = 0;
+            break;
+        case 87: //w
+            move[2] = 0;
+            break;
+    }
+}
+
+function movement(deltaTime) {
+
+    var fwd = vec3.fromValues(0, 0, 1);
+    vec3.rotateX(fwd, fwd, [0, 0, 0], degToRad(-pitchAngle));
+    vec3.rotateY(fwd, fwd, [0, 0, 0], degToRad(-yawAngle));
+    var right = vec3.fromValues(0, 0, 0);
+    var up = vec3.fromValues(0, 1, 0)
+    vec3.cross(right, up, fwd);
+    vec3.normalize(right, right);
+    vec3.cross(up, right, fwd);
+    vec3.normalize(up, up);
+
+
+    var rightMove = vec3.create();
+    vec3.scale(rightMove, right, move[0] * deltaTime);
+    var fwdMove = vec3.create();
+    vec3.scale(fwdMove, fwd, move[2] * deltaTime);
+    vec3.add(playerPos, playerPos, rightMove);
+    vec3.add(playerPos, playerPos, fwdMove);
+
+    gl.uniform3f(playerUp_location, up[0], up[1], up[2]);
+    gl.uniform3f(playerRight_location, right[0], right[1], right[2]);
+    gl.uniform3f(playerFwd_location, fwd[0], fwd[1], fwd[2]);
+    gl.uniform3f(playerPos_location, playerPos[0], playerPos[1], playerPos[2]);
+}
+
+var start = Date.now();
+var lastFrame = start;
 function render() {
-    time++;
-    requestAnimationFrame(render, canvas);
-    gl.uniform1f(zoom_location, zoom);
-    gl.uniform1f(time_location, time);
-    gl.uniformMatrix4fv(camera_rotation, false, rotMatrix);
+    var current = Date.now();
+    var elapsed = current - lastFrame;
+    lastFrame = current;
+    gl.uniform1f(time_location, current - start);
+    movement(elapsed / 1000);
+
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+    
+    requestAnimationFrame(render, canvas);
 }
 render();
