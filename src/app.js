@@ -38,7 +38,20 @@ var playerFwd_location = gl.getUniformLocation(program, "playerFwd");
 var playerUp_location = gl.getUniformLocation(program, "playerUp");
 var playerRight_location = gl.getUniformLocation(program, "playerRight");
 var time_location = gl.getUniformLocation(program, "time");
+var fr_location = gl.getUniformLocation(program, "fixed_radius");
+var mr_location = gl.getUniformLocation(program, "min_radius");
+var fl_location = gl.getUniformLocation(program, "folding_limit");
+var scale_location = gl.getUniformLocation(program, "scale");
+var shadow_location = gl.getUniformLocation(program, "shadow_count");
+var detail_location = gl.getUniformLocation(program, "detail");
+gl.uniform1f(fr_location, 1.9);
+gl.uniform1f(mr_location, .1);
+gl.uniform1f(fl_location, 1);
+gl.uniform1f(scale_location, -2.8);
+gl.uniform1f(detail_location, Math.pow(10, -4));
+
 gl.uniform2f(resolution_location, canvas.width, canvas.height);
+gl.uniform1i(shadow_location, 40);
 var mx = Math.max(canvas.width, canvas.height);
 gl.uniform2f(screen_ratio_location, canvas.width / mx, canvas.height / mx);
 
@@ -85,6 +98,24 @@ canvas.onmousewheel = function (event) {
 }
 speed_range.addEventListener('input', function () {
     speed = parseInt(speed_range.value);
+});
+document.getElementById("fixed_radius").addEventListener('input', function () {
+    gl.uniform1f(fr_location, parseFloat(document.getElementById("fixed_radius").value));
+});
+document.getElementById("min_radius").addEventListener('input', function () {
+    gl.uniform1f(mr_location, parseFloat(document.getElementById("min_radius").value));
+});
+document.getElementById("folding_limit").addEventListener('input', function () {
+    gl.uniform1f(fl_location, parseFloat(document.getElementById("folding_limit").value));
+});
+document.getElementById("scale").addEventListener('input', function () {
+    gl.uniform1f(scale_location, parseFloat(document.getElementById("scale").value));
+});
+document.getElementById("detail").addEventListener('input', function () {
+    gl.uniform1f(detail_location, Math.pow(10, -parseFloat(document.getElementById("detail").value)));
+});
+document.getElementById("shadow").addEventListener('input', function () {
+    gl.uniform1i(shadow_location, parseInt(document.getElementById("shadow").value));
 });
 
 window.addEventListener("keydown", onKeyDown, false);
