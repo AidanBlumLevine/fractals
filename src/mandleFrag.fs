@@ -36,19 +36,19 @@ void box_fold(inout vec3 z,inout float dz){
 vec2 mb(vec3 z){
     vec3 offset=z;
     float dr=1.;
-    int surface = 0;
-    float oldDist = dot(z,z);
-    for(int n=0;n<10;++n){
+    float surface = 0.;
+    vec3 colOff = vec3(0,0,0);
+    float oldDist = dot(z-colOff,z-colOff);
+    for(int n=0;n<15;++n){
         box_fold(z,dr);
         sphere_fold(z,dr);
 
-        if(oldDist >= dot(z,z)){
-            surface = n;
-        }
+        oldDist = min(oldDist, dot(z-colOff,z-colOff));
         
         z=scale*z+offset;
         dr=dr*abs(scale)+1.;
     }
+    surface = oldDist;
     float r=length(z);
     return vec2(r/abs(dr),surface);
 }
@@ -102,12 +102,24 @@ vec3 intersect(in vec3 ro,in vec3 rd,in float maxdist)
 
 vec3 colorRamp(float c)
 {
+    // float f=2.*c-1.;
+    // if(c<.5){
+    //     f=2.*c;
+    //     return(1.-f)*vec3(.843,.098,.1098)+f*vec3(.996,.988,.737);
+    // }
+    // return(1.-f)*vec3(.996,.988,.737)+f*vec3(.192,.529,.721);
+    // float f=2.*c-1.;
+    // if(c<.5){
+    //     f=2.*c;
+    //     return(1.-f)*vec3(42./255.,157./255.,143./255.)+f*vec3(233./255.,196./255.,107./255.);
+    // }
+    // return(1.-f)*vec3(233./255.,196./255.,107./255.)+f*vec3(231./255.,111./255.,81./255.);
     float f=2.*c-1.;
     if(c<.5){
         f=2.*c;
-        return(1.-f)*vec3(.843,.098,.1098)+f*vec3(.996,.988,.737);
+        return(1.-f)*vec3(219./255.,80./255.,65./255.)+f*vec3(242./255.,226./255.,93./255.);
     }
-    return(1.-f)*vec3(.996,.988,.737)+f*vec3(.192,.529,.721);
+    return(1.-f)*vec3(242./255.,226./255.,93./255.)+f*vec3(71./255.,144./255.,227./255.);
 }
 
 //not mine------
@@ -142,7 +154,7 @@ vec3 calcNormal(vec3 p,float e){
         float dist=rayData.x;
         
         vec3 skyColor=vec3(.91,.91,.76);
-        vec3 solidColor=pow(colorRamp(rayData.z/10.),vec3(1.5));
+        vec3 solidColor=pow(colorRamp(rayData.z/5.),vec3(1));
         //vec3 solidColor=color(ro+dist*rd,dist);
        // vec3 solidColor = ObjCol(ro + dist*rd).xyz;
         if(rayData.x>1024.||rayData.z<0.){
