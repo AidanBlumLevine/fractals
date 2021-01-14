@@ -16,7 +16,6 @@ uniform int shadow_count;
 uniform float detail;
 
 float scaleEpsilon=.001;
-
 void sphere_fold(inout vec3 z,inout float dz){
     float r2=dot(z,z);
     if(r2<min_radius){
@@ -30,32 +29,6 @@ void sphere_fold(inout vec3 z,inout float dz){
     }
 }
 
-// vec3 color(vec3 pos,float sphereR)
-// {
-    //     vec3 surfaceColour1=vec3(.8,.0,0.);
-    //     vec3 surfaceColour2=vec3(.4,.4,.5);
-    //     vec3 surfaceColour3=vec3(.5,.3,0.);
-    //     vec3 p=pos;
-    //     vec3 p0=p;
-    //     float trap=1.;
-    
-    //     for(int i=0;i<6;i++)
-    //     {
-        //         p.xyz=clamp(p.xyz,-1.,1.)*2.-p.xyz;
-        //         float r2=dot(p.xyz,p.xyz);
-        //         p*=clamp(max(.25/r2,.25),0.,1.);
-        //         p=p*vec3(scale)+p0.xyz;
-        //         trap=min(trap,r2);
-    //     }
-    //     // |c.x|: log final distance (fractional iteration count)
-    //     // |c.y|: spherical orbit trap at (0,0,0)
-    //     vec2 c=clamp(vec2(.3333*log(dot(p,p))-1.,sqrt(trap)),0.,1.);
-    
-    //     float t=mod(length(pos),16.);
-    //     surfaceColour1=mix(surfaceColour1,vec3(.4,3.,5.),pow(smoothstep(0.,.3,t)*smoothstep(.6,.3,t),10.));
-    //     return mix(mix(surfaceColour1,surfaceColour2,c.y),surfaceColour3,c.x);
-// }
-
 void box_fold(inout vec3 z,inout float dz){
     z=clamp(z,-folding_limit,folding_limit)*2.-z;
 }
@@ -63,18 +36,48 @@ void box_fold(inout vec3 z,inout float dz){
 vec2 mb(vec3 z){
     vec3 offset=z;
     float dr=1.;
-    float minDist = 10000.;
+    int surface = 0;
+    float oldDist = dot(z,z);
     for(int n=0;n<10;++n){
         box_fold(z,dr);
         sphere_fold(z,dr);
+
+        if(oldDist >= dot(z,z)){
+            surface = n;
+        }
         
         z=scale*z+offset;
         dr=dr*abs(scale)+1.;
-        minDist = min(minDist, length(z));
-        //scale = -2.8 - 0.2 * stime;
     }
     float r=length(z);
-    return vec2(r/abs(dr),minDist);
+    return vec2(r/abs(dr),surface);
+}
+
+vec3 HsvToRgb (vec3 c)
+{
+  return c.z * mix (vec3 (1.), clamp (abs (fract (c.xxx + vec3 (1., 2./3., 1./3.)) * 6. - 3.) - 1., 0., 1.), c.y);
+}
+
+vec4 ObjCol (vec3 p)
+{
+  vec3 p3, col;
+  float pp, ppMin, cn, s;
+  p = mod (p + 3., 6.) - 3.;
+  p3 = p;
+  cn = 0.;
+  ppMin = 1.;
+  for (float j = 0.; j < 10.; j ++) {
+    p3 = 2. * clamp (p3, -1., 1.) - p3;
+    pp = dot (p3, p3);
+    if (pp < ppMin) {
+      cn = j;
+      ppMin = pp;
+    }
+    p3 = 2.8 * p3 / clamp (pp, 0.25, 1.) + p;
+  }
+  s = mod (cn, 2.);
+  col = HsvToRgb (vec3 (mod (0.6 + 1.5 * cn / 10., 1.), mix (0.6, 0., s), 1.));
+  return vec4 (col, 0.05 + 0.4 * s);
 }
 
 vec2 map(in vec3 rayP)
@@ -139,8 +142,9 @@ vec3 calcNormal(vec3 p,float e){
         float dist=rayData.x;
         
         vec3 skyColor=vec3(.91,.91,.76);
-        vec3 solidColor=pow(colorRamp(rayData.z/5.),vec3(1.5));
+        vec3 solidColor=pow(colorRamp(rayData.z/10.),vec3(1.5));
         //vec3 solidColor=color(ro+dist*rd,dist);
+       // vec3 solidColor = ObjCol(ro + dist*rd).xyz;
         if(rayData.x>1024.||rayData.z<0.){
             return skyColor;
         }
