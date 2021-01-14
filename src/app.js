@@ -1,10 +1,10 @@
 import vert from './generalVert.vs';
-import frag from './foggyFrag.fs';
+import frag from './mandleFrag.fs';
 import { vec3 } from 'gl-matrix';
 
 var lastX, lastY, mouseDown = false;
 var yawAngle = 0, pitchAngle = 0;
-var playerPos = vec3.fromValues(0, 0, -2);
+var playerPos = vec3.fromValues(0, 0, -4);
 var time = 0;
 var move = [0, 0, 0];
 var speed = 3;
