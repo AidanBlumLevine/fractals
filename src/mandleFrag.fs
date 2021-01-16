@@ -14,170 +14,162 @@ uniform float folding_limit;
 uniform float scale;
 uniform int shadow_count;
 uniform float detail;
+uniform int recursions;
 
-float scaleEpsilon=.001;
-void sphere_fold(inout vec3 z,inout float dz){
-    float r2=dot(z,z);
-    if(r2<min_radius){
-        float temp=(fixed_radius/min_radius);
-        z*=temp;
-        dz*=temp;
-    }else if(r2<fixed_radius){
-        float temp=(fixed_radius/r2);
-        z*=temp;
-        dz*=temp;
+const float scaleEpsilon = 0.001;
+const int steps = 100;
+
+float sdBox(vec3 p, vec3 b)
+{
+    vec3 q = abs(p) - b;
+    return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
+}
+
+void sphere_fold(inout vec4 z) {
+    z *= fixed_radius / clamp(dot(z.xyz, z.xyz), min_radius, fixed_radius);
+}
+
+void box_fold(inout vec4 z) {
+    z.xyz = clamp(z.xyz, - folding_limit, folding_limit) * 2.0 - z.xyz;
+}
+
+void sphere_fold_c(inout vec4 z, inout vec3 color) {
+    float r2 = dot(z.xyz, z.xyz);
+    color += vec3(0, - 0.25, 0.25);
+    if (r2 < min_radius) {
+        z *= (fixed_radius / min_radius);
+        color += vec3(0, 3.25, 1.75);
+    }else if (r2 < fixed_radius) {
+        z *= (fixed_radius / r2);
+        color += vec3(2.0, 0.25, - 0.25);
     }
 }
 
-void box_fold(inout vec3 z,inout float dz){
-    z=clamp(z,-folding_limit,folding_limit)*2.-z;
+void box_fold_c(inout vec4 z, inout vec3 color) {
+    vec3 pos = z.xyz;
+    z.xyz = clamp(z.xyz, - folding_limit, folding_limit);
+    color.x += pos == z.xyz ? 10.0 : 0.0;
+    z.xyz = z.xyz * 2.0 - pos;
 }
 
-vec2 mb(vec3 z){
-    vec3 offset=z;
-    float dr=1.;
-    float surface = 0.;
-    vec3 colOff = vec3(0,0,0);
-    float oldDist = dot(z-colOff,z-colOff);
-    for(int n=0;n<15;++n){
-        box_fold(z,dr);
-        sphere_fold(z,dr);
+void shiftXY(inout vec4 z, float angle, float radius) {
+    float c = cos(angle);
+    float s = sin(angle);
+    z = vec4(vec2(c, s) * radius + z.xy, z.zw);
+}
+void invertRadius(inout vec4 z, float radius2, float limit) {
+    float r2 = dot(z.xyz, z.xyz);
+    float f = clamp(radius2 / r2, 1.0, limit);
+    z *= f;
+}
+void rotateXZ(inout vec4 z, float angle) {
+    float c = cos(angle);
+    float s = sin(angle);
+    mat2 m = mat2(c, s, - s, c);
+    vec2 r = m * z.xz;
+    z = vec4(r.xyy, z.w);
+}
 
-        oldDist = min(oldDist, dot(z-colOff,z-colOff));
-        
-        z=scale*z+offset;
-        dr=dr*abs(scale)+1.;
+float map(vec3 pos) {
+    vec4 z = vec4(pos, 1.0);
+    for(int n = 0; n < 25; ++ n) {
+        if (n == recursions)break;
+        box_fold(z);
+        sphere_fold(z);
+        z.xyz = scale * z.xyz + pos;
+        z.w = z.w * abs(scale) + 1.0;
     }
-    surface = oldDist;
-    float r=length(z);
-    return vec2(r/abs(dr),surface);
+    return sdBox(z.xyz, vec3(5)) / abs(z.w);
 }
 
-vec3 HsvToRgb (vec3 c)
-{
-  return c.z * mix (vec3 (1.), clamp (abs (fract (c.xxx + vec3 (1., 2./3., 1./3.)) * 6. - 3.) - 1., 0., 1.), c.y);
-}
-
-vec4 ObjCol (vec3 p)
-{
-  vec3 p3, col;
-  float pp, ppMin, cn, s;
-  p = mod (p + 3., 6.) - 3.;
-  p3 = p;
-  cn = 0.;
-  ppMin = 1.;
-  for (float j = 0.; j < 10.; j ++) {
-    p3 = 2. * clamp (p3, -1., 1.) - p3;
-    pp = dot (p3, p3);
-    if (pp < ppMin) {
-      cn = j;
-      ppMin = pp;
+vec3 map_color(vec3 pos) {
+    vec3 surface = vec3(0, float(recursions) / 1.8, 0);
+    vec4 z = vec4(pos, 1.0);
+    for(int n = 0; n < 25; ++ n) {
+        if (n == recursions)break;
+        box_fold_c(z, surface);
+        sphere_fold_c(z, surface);
+        z.xyz = scale * z.xyz + pos;
+        z.w = z.w * abs(scale) + 1.0;
     }
-    p3 = 2.8 * p3 / clamp (pp, 0.25, 1.) + p;
-  }
-  s = mod (cn, 2.);
-  col = HsvToRgb (vec3 (mod (0.6 + 1.5 * cn / 10., 1.), mix (0.6, 0., s), 1.));
-  return vec4 (col, 0.05 + 0.4 * s);
+    surface /= float(recursions);
+    surface = sqrt(surface);
+    return surface;
 }
 
-vec2 map(in vec3 rayP)
+vec2 intersect(in vec3 ro, in vec3 rd, in float maxdist)
 {
-    return mb(rayP);
-}
-
-vec3 intersect(in vec3 ro,in vec3 rd,in float maxdist)
-{
-    float dist=0.;
-    for(int i=0;i<100;i++)
+    float dist = 0.0;
+    for(int i = 0; i < steps; i ++ )
     {
-        vec3 rayP=ro+dist*rd;
-        vec2 mapData=map(rayP);
-        if(mapData.x<(scaleEpsilon*dist+detail)||dist>maxdist){
-            return vec3(dist,i,mapData.y);
+        vec3 rayP = ro + dist * rd;
+        float mapDist = map(rayP);
+        if (mapDist < (scaleEpsilon * dist + detail)||dist > maxdist) {
+            return vec2(dist, i);
         }
-        dist+=mapData.x;
+        dist += mapDist;
     }
-    return vec3(dist,100,-1);
-}
-
-vec3 colorRamp(float c)
-{
-    // float f=2.*c-1.;
-    // if(c<.5){
-    //     f=2.*c;
-    //     return(1.-f)*vec3(.843,.098,.1098)+f*vec3(.996,.988,.737);
-    // }
-    // return(1.-f)*vec3(.996,.988,.737)+f*vec3(.192,.529,.721);
-    // float f=2.*c-1.;
-    // if(c<.5){
-    //     f=2.*c;
-    //     return(1.-f)*vec3(42./255.,157./255.,143./255.)+f*vec3(233./255.,196./255.,107./255.);
-    // }
-    // return(1.-f)*vec3(233./255.,196./255.,107./255.)+f*vec3(231./255.,111./255.,81./255.);
-    float f=2.*c-1.;
-    if(c<.5){
-        f=2.*c;
-        return(1.-f)*vec3(219./255.,80./255.,65./255.)+f*vec3(242./255.,226./255.,93./255.);
-    }
-    return(1.-f)*vec3(242./255.,226./255.,93./255.)+f*vec3(71./255.,144./255.,227./255.);
+    return vec2(dist, steps);
 }
 
 //not mine------
-float softshadow(vec3 ro,vec3 rd,float k){
-    float akuma=1.,h=0.;
-    float t=.01;
-    for(int i=0;i<50;++i){
-        if(i>=shadow_count){
+float softshadow(vec3 ro, vec3 rd, float k) {
+    float akuma = 1.0, h = 0.0;
+    float t = 0.001;
+    for(int i = 0; i < 50; ++ i) {
+        if (i >= shadow_count) {
             return akuma;
         }
-        h=map(ro+rd*t).x;
-        if(h<.001)return.02;
-        akuma=min(akuma,k*h/t);
-        t+=clamp(h,.01,2.);
+        h = map(ro + rd * t);
+        if (h < 0.0001)return.02;
+        akuma = min(akuma, k * h / t);
+        t += h;
     }
     return akuma;
 }
 //---------------
 
-vec3 calcNormal(vec3 p,float e){
+vec3 calcNormal(vec3 p, float e) {
     return normalize(vec3(
-            map(vec3(p.x+e,p.y,p.z)).x-map(vec3(p.x-e,p.y,p.z)).x,
-            map(vec3(p.x,p.y+e,p.z)).x-map(vec3(p.x,p.y-e,p.z)).x,
-            map(vec3(p.x,p.y,p.z+e)).x-map(vec3(p.x,p.y,p.z-e)).x
+            map(vec3(p.x + e, p.y, p.z)) - map(vec3(p.x - e, p.y, p.z)),
+            map(vec3(p.x, p.y + e, p.z)) - map(vec3(p.x, p.y - e, p.z)),
+            map(vec3(p.x, p.y, p.z + e)) - map(vec3(p.x, p.y, p.z - e))
         ));
     }
     
-    vec3 render(in vec3 ro,in vec3 rd,bool effect)
+    vec3 render(in vec3 ro, in vec3 rd, bool effect)
     {
-        vec3 light=vec3(1,-1,1);//point at player for backlit effect
-        vec3 rayData=intersect(ro,rd,1024.);
-        float dist=rayData.x;
+        vec3 light = vec3(4, - 2, 1);
+        vec3 lightColor = vec3(0.5, 0.34, 0.26);
         
-        vec3 skyColor=vec3(.91,.91,.76);
-        vec3 solidColor=pow(colorRamp(rayData.z/5.),vec3(1));
-        //vec3 solidColor=color(ro+dist*rd,dist);
-       // vec3 solidColor = ObjCol(ro + dist*rd).xyz;
-        if(rayData.x>1024.||rayData.z<0.){
-            return skyColor;
+        vec2 rayData = intersect(ro, rd, 1024.0);
+        float dist = rayData.x;
+        
+        vec3 color = map_color(ro + rd * dist);
+        
+        if (dist > 1024.0 || int(rayData.y) == steps) {
+            return vec3(0.91, 0.91, 0.76) + vec3(smoothstep(0.98, 1.0, dot(rd, - normalize(light))));
         }
         
-        vec3 normal=calcNormal(ro+dist*rd,scaleEpsilon*dist+detail);
+        vec3 normal = calcNormal(ro + dist * rd, scaleEpsilon * dist + detail);
+        float specular = pow(dot(-normalize(rd), reflect(normalize(light), normal)), 32.0);
         
-        float distOcclusion=1.-rayData.y*2./200.;//hacky occlusion, more occlusion means higher number
-        float diffuseLighting=1.-clamp(dot(light,normal),0.,1.);
+        float distOcclusion = 1.0 - rayData.y / float(steps); //hacky occlusion, more occlusion means higher number
+        float diffuseLighting = 1.0 - clamp(dot(light, normal), 0.0, 1.0);
         
-        float shadow=softshadow(ro+dist*rd,-light,10.);
-        float combinedShading=diffuseLighting*.3+distOcclusion*.2+.3*shadow+.2;
-        return solidColor*combinedShading;
+        float shadow = softshadow(ro + dist * rd, - light, 10.0);
+        specular *= shadow;
+        
+        return color * (diffuseLighting * 0.3 + distOcclusion * 0.2 + 0.3 * shadow) + vec3(0.1 + 0.5 * clamp(specular, 0.0, 1.0));
     }
     
     void main(void)
     {
-        vec2 screenPos=-1.+2.*gl_FragCoord.xy/resolution.xy;// screenPos can range from -1 to 1
-        screenPos.x*=resolution.x/resolution.y;
+        vec2 screenPos =- 1.0 + 2.0 * gl_FragCoord.xy / resolution.xy; // screenPos can range from -1 to 1
+        screenPos.x *= resolution.x / resolution.y;
         
-        vec3 ro=playerPos;
-        vec3 rd=normalize(playerFwd+playerRight*screenPos.x+playerUp*-screenPos.y);
-        vec3 col=render(ro,rd,screenPos.x>0.);
-        gl_FragColor=vec4(col,1.);
+        vec3 ro = playerPos;
+        vec3 rd = normalize(playerFwd + playerRight * screenPos.x + playerUp *- screenPos.y);
+        vec3 col = render(ro, rd, screenPos.x > 0.0);
+        gl_FragColor = vec4(col, 1.0);
     }

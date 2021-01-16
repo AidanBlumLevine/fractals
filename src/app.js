@@ -44,14 +44,16 @@ var fl_location = gl.getUniformLocation(program, "folding_limit");
 var scale_location = gl.getUniformLocation(program, "scale");
 var shadow_location = gl.getUniformLocation(program, "shadow_count");
 var detail_location = gl.getUniformLocation(program, "detail");
+var r_count_location = gl.getUniformLocation(program, "recursions");
+gl.uniform1i(r_count_location, 10);
 gl.uniform1f(fr_location, 1.9);
 gl.uniform1f(mr_location, .1);
 gl.uniform1f(fl_location, 1);
 gl.uniform1f(scale_location, -2.8);
-gl.uniform1f(detail_location, Math.pow(10, -4));
-
+gl.uniform1f(detail_location, Math.pow(10, -6));
+gl.uniform1i(shadow_location, 0);
 gl.uniform2f(resolution_location, canvas.width, canvas.height);
-gl.uniform1i(shadow_location, 40);
+
 var mx = Math.max(canvas.width, canvas.height);
 gl.uniform2f(screen_ratio_location, canvas.width / mx, canvas.height / mx);
 
@@ -116,6 +118,9 @@ document.getElementById("detail").addEventListener('input', function () {
 });
 document.getElementById("shadow").addEventListener('input', function () {
     gl.uniform1i(shadow_location, parseInt(document.getElementById("shadow").value));
+});
+document.getElementById("r_count").addEventListener('input', function () {
+    gl.uniform1i(r_count_location, parseInt(document.getElementById("r_count").value));
 });
 
 window.addEventListener("keydown", onKeyDown, false);
@@ -195,7 +200,7 @@ function render() {
     lastFrame = current;
     gl.uniform1f(time_location, current - start);
     movement(elapsed / 1000);
-
+    document.getElementById("fps").textContent=Math.round(1000/elapsed);
     gl.drawArrays(gl.TRIANGLES, 0, 6);
 
     requestAnimationFrame(render, canvas);
