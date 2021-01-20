@@ -30,7 +30,7 @@
             white-space: nowrap;
         }
 
-        .mainbar{
+        .mainbar {
             flex-grow: 1;
             width: 100%;
             height: 100%;
@@ -51,6 +51,7 @@
             padding: .5rem;
             margin-left: .5rem;
         }
+
         .belowtitle {
             display: flex;
             padding: 0rem 1rem .5rem .5rem;
@@ -95,10 +96,6 @@
             align-self: center;
             padding: .25rem;
             margin-bottom: 1rem;
-        }
-
-        .button:hover {
-            background-color: whitesmoke;
         }
 
         .checkbox {
@@ -147,8 +144,15 @@
             padding: 7px 7px;
             margin: 1rem;
         }
+
         .bottom {
             margin-top: auto;
+        }
+
+        .codewrapper {
+            position: relative;
+            display: flex;
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -164,31 +168,19 @@
             <div class="rangewrapper">
                 <input type="range" min="-40" max="20" value="0" id="speed"></input>
             </div>
-            <div class="title"> FRACTAL SETTINGS </div>
-            <div class="subtitle">fixed radius</div>
-            <div class="rangewrapper">
-                <input type="range" min="1" max="3" value="1.9" step="0.01" id="fixed_radius"></input>
+            <div class="title"> FRACTAL </div>
+            <div id="fractal-edit" class="codewrapper">
+
             </div>
-            <div class="subtitle">min radius</div>
-            <div class="rangewrapper">
-                <input type="range" min=".01" max=".4" value=".1" step="0.01" id="min_radius"></input>
+            <div id="color-edit" class="codewrapper">
+
             </div>
-            <div class="subtitle">folding limit</div>
-            <div class="rangewrapper">
-                <input type="range" min=".5" max="3" value="1" step="0.01" id="folding_limit"></input>
-            </div>
-            <div class="subtitle">scale</div>
-            <div class="rangewrapper">
-                <input type="range" min="-4" max="-.01" value="-2.8" step="0.01" id="scale"></input>
-            </div>
+            <button class="button" id="shader">Update</button>
+
             <div class="title"> PERFORMANCE </div>
             <div class="centerbelowtitle"><i>running slowly?</i></div>
             <div class="centerbelowtitle"><i>turn these down</i></div>
 
-            <div class="subtitle">recursion count</div>
-            <div class="rangewrapper">
-                <input type="range" min="1" max="17" value="10" id="r_count"></input>
-            </div>
             <div class="subtitle">shadows</div>
             <div class="rangewrapper">
                 <input type="range" min="0" max="50" value="0" id="shadow"></input>
@@ -204,6 +196,10 @@
     <div class="column mainbar">
         <canvas id="canvas"></canvas>
     </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="lib/codemirror.js"></script>
+    <link rel="stylesheet" href="lib/codemirror.css">
+    <link rel="stylesheet" href="lib/theme.css">
     <script src="dist/pack.js"></script>
 </body>
 

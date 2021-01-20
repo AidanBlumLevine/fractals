@@ -130,24 +130,7 @@ void menger_c(inout vec4 z,vec3 c,inout vec3 color){
 }
 
 float map(vec3 pos){
-    vec4 z=vec4(pos,1.);
-    
-    menger(z,vec3(.5));
-    menger(z,vec3(1));
-    rotateY(z,3.14159/16.);
-    for(int n=0;n<25;++n){
-            if(n==recursions)break;
-            menger(z,vec3(1));
-    }
-    //tetrahedral(z);
-    
-    // for(int n=0;n<5;n++){
-        //     if(n+5>=recursions)break;
-        //     mendelbox(z,pos);
-    // }
-    
-    //return length(z.xyz)/abs(z.w);
-    return sdBox(z.xyz,vec3(5))/abs(z.w);
+    INSERT FRACTAL HERE
 }
 
 vec2 intersect(in vec3 ro,in vec3 rd,in float maxdist)
@@ -206,24 +189,7 @@ void box_fold_c(inout vec4 z,inout vec3 color){
 }
 
 vec3 map_color(vec3 pos){
-    //vec3 surface=vec3(0,float(recursions)/2.,0);
-    vec3 surface=vec3(0,0,.5);
-    vec4 z=vec4(pos,1.);
-    for(int n=0;n<2;++n){
-        if(n==recursions)break;
-        menger_c(z,vec3(1),surface);
-        // box_fold_c(z,surface);
-        // sphere_fold_c(z,surface);
-        // z.xyz=scale*z.xyz+pos;
-        // z.w=z.w*abs(scale)+1.;
-    }
-    // menger_c(z,vec3(1),surface);
-    // rotateY(z,3.14159/16.);
-    // menger_c(z,vec3(1),surface);
-    // menger_c(z,vec3(1),surface);
-    surface/=2.;
-    //surface = sqrt(surface);
-    return surface;
+    INSERT COLOR HERE
 }
 
 vec3 hsv2rgb(vec3 c){
