@@ -8,13 +8,13 @@ uniform vec3 playerRight;
 uniform vec3 playerUp;
 uniform vec2 resolution;
 
-uniform float fixed_radius;
-uniform float min_radius;
-uniform float folding_limit;
-uniform float scale;
+const float fixed_radius = 1.9;
+const float min_radius = .1;
+const float folding_limit = 1.;
+const float scale = -2.8;
 uniform int shadow_count;
 uniform float detail;
-uniform int recursions;
+const int recursions = 5;
 
 const float scaleEpsilon=.001;
 const int steps=100;
@@ -43,110 +43,23 @@ void invertRadius(inout vec4 z,float radius2,float limit){
     float f=clamp(radius2/r2,1.,limit);
     z*=f;
 }
-void rotateZ(inout vec4 z,float angle){
+void rotateXZ(inout vec4 z,float angle){
     float c=cos(angle);
     float s=sin(angle);
-    vec4 rotated=z;
-    rotated.x=z.x*c-z.y*s;
-    rotated.y=z.y*c+z.x*s;
-    z=rotated;
-}
-void rotateY(inout vec4 z,float angle){
-    float c=cos(angle);
-    float s=sin(angle);
-    vec4 rotated=z;
-    rotated.x=z.x*c-z.z*s;
-    rotated.z=z.z*c+z.x*s;
-    z=rotated;
-}
-void rotateX(inout vec4 z,float angle){
-    float c=cos(angle);
-    float s=sin(angle);
-    vec4 rotated=z;
-    rotated.z=z.z*c-z.y*s;
-    rotated.y=z.y*c+z.z*s;
-    z=rotated;
-}
-
-void tetrahedral(inout vec4 z){
-    if(z.x+z.y<0.)z.xy=-z.yx;// fold 1
-    if(z.x+z.z<0.)z.xz=-z.zx;// fold 2
-    if(z.y+z.z<0.)z.zy=-z.yz;// fold 3
-}
-
-void mendelbox(inout vec4 z,vec3 pos){
-    box_fold(z);
-    sphere_fold(z);
-    z.xyz=scale*z.xyz+pos;
-    z.w=z.w*abs(scale)+1.;
-}
-
-void sharpbox(inout vec4 z){
-    tetrahedral(z);
-    box_fold(z);
-    rotateZ(z,10.);
-    z*=scale;
-}
-
-void menger(inout vec4 z,vec3 c){
-    rotateX(z,3.14159/3.);
-    
-    z=abs(z);
-    if(z.x-z.y<0.){z.xy=z.yx;}
-    if(z.x-z.z<0.){z.xz=z.zx;}
-    if(z.y-z.z<0.){z.yz=z.zy;}
-    
-    z.z-=.5*c.z*(scale-1.)/scale;
-    z.z=-abs(-z.z);
-    rotateZ(z,3.14159/60.);
-    rotateX(z,3.14159/30.);
-    
-    z.z+=.5*c.z*(scale-1.)/scale;
-    z*=scale;
-    z.x-=c.x*(scale-1.);
-    z.y-=c.y*(scale-1.);
-}
-
-void menger_c(inout vec4 z,vec3 c,inout vec3 color){
-    rotateX(z,3.14159/3.);
-    z=abs(z);
-    if(z.x-z.y<0.){z.xy=z.yx;}
-    if(z.x-z.z<0.){z.xz=z.zx;}
-    if(z.y-z.z<0.){z.yz=z.zy;}
-    
-    z.z-=.5*c.z*(scale-1.)/scale;
-    float ozz=z.z;
-    z.z=-abs(-z.z);
-    if(ozz>z.z){
-        color.x++;
-    }
-    rotateZ(z,3.14159/60.);
-    rotateX(z,3.14159/30.);
-    
-    z.z+=.5*c.z*(scale-1.)/scale;
-    z*=scale;
-    z.x-=c.x*(scale-1.);
-    z.y-=c.y*(scale-1.);
+    mat2 m=mat2(c,s,-s,c);
+    vec2 r=m*z.xz;
+    z=vec4(r.xyy,z.w);
 }
 
 float map(vec3 pos){
     vec4 z=vec4(pos,1.);
-    
-    menger(z,vec3(.5));
-    menger(z,vec3(1));
-    rotateY(z,3.14159/16.);
     for(int n=0;n<25;++n){
-            if(n==recursions)break;
-            menger(z,vec3(1));
+        if(n==recursions)break;
+        box_fold(z);
+        sphere_fold(z);
+        z.xyz=scale*z.xyz+pos;
+        z.w=z.w*abs(scale)+1.;
     }
-    //tetrahedral(z);
-    
-    // for(int n=0;n<5;n++){
-        //     if(n+5>=recursions)break;
-        //     mendelbox(z,pos);
-    // }
-    
-    //return length(z.xyz)/abs(z.w);
     return sdBox(z.xyz,vec3(5))/abs(z.w);
 }
 
@@ -206,22 +119,16 @@ void box_fold_c(inout vec4 z,inout vec3 color){
 }
 
 vec3 map_color(vec3 pos){
-    //vec3 surface=vec3(0,float(recursions)/2.,0);
-    vec3 surface=vec3(0,0,.5);
+    vec3 surface=vec3(0,float(recursions)/2.,0);
     vec4 z=vec4(pos,1.);
-    for(int n=0;n<2;++n){
+    for(int n=0;n<25;++n){
         if(n==recursions)break;
-        menger_c(z,vec3(1),surface);
-        // box_fold_c(z,surface);
-        // sphere_fold_c(z,surface);
-        // z.xyz=scale*z.xyz+pos;
-        // z.w=z.w*abs(scale)+1.;
+        box_fold_c(z,surface);
+        sphere_fold_c(z,surface);
+        z.xyz=scale*z.xyz+pos;
+        z.w=z.w*abs(scale)+1.;
     }
-    // menger_c(z,vec3(1),surface);
-    // rotateY(z,3.14159/16.);
-    // menger_c(z,vec3(1),surface);
-    // menger_c(z,vec3(1),surface);
-    surface/=2.;
+    surface/=float(recursions);
     //surface = sqrt(surface);
     return surface;
 }
