@@ -53,7 +53,7 @@ function run() {
     fractal += `return box(z.xyz,vec3(0),vec3(${d[0]},${d[1]},${d[2]}))/abs(z.w);\n`;
     //console.log(fractal);
     var color = codify($('#color'));
-    //console.log(color);
+    console.log(color);
     var Nfrag = frag.replace('INSERTFRACTALHERE', fractal);
     Nfrag = Nfrag.replace('INSERTCOLORHERE', color);
     //console.log(Nfrag);
@@ -84,7 +84,6 @@ function run() {
     gl.uniform1f(detail_location, Math.pow(10, -$('#detail').val()));
     gl.uniform1i(shadow_location, $('#shadow').val());
     gl.uniform1i(render_location, $('#render').val());
-    console.log($('#render').val());
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0]), gl.STATIC_DRAW);
@@ -97,7 +96,7 @@ function save() {
     var encodedFractal = encodeList($('#fractal'));
     var encodedColor = encodeList($('#color'));
     var d = $('#draw-region').children().eq(0).val() + ',' + $('#draw-region').children().eq(1).val() + ',' + $('#draw-region').children().eq(2).val();
-    window.history.replaceState(null, null, "?fractal=" + encodedFractal + "&draw="+d + "&color=" + encodedColor);
+    window.history.replaceState(null, null, "?fractal=" + encodedFractal + "&draw=" + d + "&color=" + encodedColor);
 }
 
 function makeTextChangesSave() {
@@ -138,13 +137,13 @@ function encodeNode(node) {
         case 'Translate':
             encoded = 'FT' + encodeVector(children.eq(1));
             break;
-        case 'Box':
-            encoded = 'FB' + encodeVector(children.eq(1));
-            encoded += ',' + encodeVector(children.eq(2));
-            break;
-        case 'Sphere':
-            encoded = 'FS' + encodeVector(children.eq(1)) + ',' + children.eq(2).val();
-            break;
+        // case 'Box':
+        //     encoded = 'FB' + encodeVector(children.eq(1));
+        //     encoded += ',' + encodeVector(children.eq(2));
+        //     break;
+        // case 'Sphere':
+        //     encoded = 'FS' + encodeVector(children.eq(1)) + ',' + children.eq(2).val();
+        //     break;
         case 'Box_Fold':
             encoded = 'FH' + children.eq(1).val();
             break;
@@ -162,6 +161,10 @@ function encodeNode(node) {
             break;
         case 'Scale':
             encoded = 'FQ' + children.eq(1).val();
+            break;
+        case 'Orbit_Trap':
+            encoded = 'FB' + children.eq(0).children().eq(1).val() + ',' + children.eq(0).children().eq(2).val();
+            encoded += encodeList(children.eq(1)) + 'FX' + children.eq(0).children().eq(2).val();
             break;
     }
     return encoded;
@@ -187,16 +190,16 @@ function decodeSave(saved, parentNode) {
                 newNode = $(".master[data-name='Translate']").clone().removeClass("master");
                 decodeVector(newNode.children().eq(1), f.substring(1).split(','));
                 break;
-            case 'B':
-                newNode = $(".master[data-name='Box']").clone().removeClass("master");
-                decodeVector(newNode.children().eq(1), f.substring(1).split(','));
-                decodeVector(newNode.children().eq(2), f.substring(1).split(',').slice(3));
-                break;
-            case 'S':
-                newNode = $(".master[data-name='Sphere']").clone().removeClass("master");
-                decodeVector(newNode.children().eq(1), f.substring(1).split(','));
-                newNode.children().eq(2).val(f.substring(1).split(',')[3]);
-                break;
+            // case 'B':
+            //     newNode = $(".master[data-name='Box']").clone().removeClass("master");
+            //     decodeVector(newNode.children().eq(1), f.substring(1).split(','));
+            //     decodeVector(newNode.children().eq(2), f.substring(1).split(',').slice(3));
+            //     break;
+            // case 'S':
+            //     newNode = $(".master[data-name='Sphere']").clone().removeClass("master");
+            //     decodeVector(newNode.children().eq(1), f.substring(1).split(','));
+            //     newNode.children().eq(2).val(f.substring(1).split(',')[3]);
+            //     break;
             case 'H':
                 newNode = $(".master[data-name='Box_Fold']").clone().removeClass("master");
                 newNode.children().eq(1).val(f.substring(1));
@@ -221,6 +224,15 @@ function decodeSave(saved, parentNode) {
             case 'Q':
                 newNode = $(".master[data-name='Scale']").clone().removeClass("master");
                 newNode.children().eq(1).val(f.substring(1));
+                break;
+            case 'B':
+                newNode = $(".master[data-name='Orbit_Trap']").clone().removeClass("master");
+                newNode.children().eq(0).children().eq(1).val(f.substring(1).split(',')[0]);
+                newNode.children().eq(0).children().eq(2).val(f.substring(1).split(',')[1]);
+                nextParentNode = newNode.find(".codeblock-list-master").removeClass("codeblock-list-master").addClass("codeblock-list");
+                break;
+            case 'X':
+                nextParentNode = parentNode.parent().closest('.codeblock-list');
                 break;
         }
         if (newNode != null) {
@@ -271,12 +283,12 @@ function codify(node) {
             case 'T':
                 code += `translate(z,vec3(${f[0]},${f[1]},${f[2]}));\n`;
                 break;
-            case 'B':
-                code += `return box(z.xyz,vec3(${f[0]},${f[1]},${f[2]}),vec3(${f[3]},${f[4]},${f[5]}))/abs(z.w);\n`;
-                break;
-            case 'S':
-                code += `return sphere(z.xyz,vec3(${f[0]},${f[1]},${f[2]}),${f[3]})/abs(z.w);\n`;
-                break;
+            // case 'B':
+            //     code += `return box(z.xyz,vec3(${f[0]},${f[1]},${f[2]}),vec3(${f[3]},${f[4]},${f[5]}))/abs(z.w);\n`;
+            //     break;
+            // case 'S':
+            //     code += `return sphere(z.xyz,vec3(${f[0]},${f[1]},${f[2]}),${f[3]})/abs(z.w);\n`;
+            //     break;
             case 'H':
                 code += `box_fold(z,${f[0]});\n`;
                 break;
@@ -294,6 +306,13 @@ function codify(node) {
                 break;
             case 'Q':
                 code += `scale(z,${f[0]});\n`;
+                break;
+            case 'B':
+                code += `for(int i = 0; i < ${i[0]}; i++){\n`;
+                break;
+            case 'X':
+                code += `orbit = min(orbit, abs(length(z.xyz) / z.w));}\n`;
+                code += `return hsv2rgb(vec3(orbit * ${f[0]}, 0.5, 0.5));`;
                 break;
         }
     }

@@ -68,16 +68,16 @@ void rotateX(inout vec4 z, float angle) {
     z = rotated;
 }
 
-void rotate(inout vec4 z, vec3 angle){
+void rotate(inout vec4 z, vec3 angle) {
     rotateX(z, angle.x);
     rotateY(z, angle.y);
     rotateZ(z, angle.z);
 }
 
-void translate(inout vec4 z, vec3 transform){
+void translate(inout vec4 z, vec3 transform) {
     z.xyz += transform;
 }
-void scale(inout vec4 z, float transform){
+void scale(inout vec4 z, float transform) {
     z *= transform;
 }
 void tetrahedral(inout vec4 z) {
@@ -105,20 +105,20 @@ void mandel(inout vec4 z, vec3 pos, float scale) {
     //     //z*=scale;
 // }
 
-void menger(inout vec4 z,vec3 c, float scale){
+void menger(inout vec4 z, vec3 c, float scale) {
     
-        z=abs(z);
-        if(z.x-z.y<0.){z.xy=z.yx;}
-        if(z.x-z.z<0.){z.xz=z.zx;}
-        if(z.y-z.z<0.){z.yz=z.zy;}
+    z = abs(z);
+    if (z.x - z.y < 0.0) {z.xy = z.yx; }
+    if (z.x - z.z < 0.0) {z.xz = z.zx; }
+    if (z.y - z.z < 0.0) {z.yz = z.zy; }
     
-        z.z-=.5*c.z*(scale-1.)/scale;
-        z.z=-abs(-z.z);
-
-        z.z+=.5*c.z*(scale-1.)/scale;
-        z*=scale;
-        z.x-=c.x*(scale-1.);
-        z.y-=c.y*(scale-1.);
+    z.z -= 0.5 * c.z * (scale - 1.0) / scale;
+    z.z =- abs(-z.z);
+    
+    z.z += 0.5 * c.z * (scale - 1.0) / scale;
+    z *= scale;
+    z.x -= c.x * (scale - 1.0);
+    z.y -= c.y * (scale - 1.0);
 }
 
 // void menger_c(inout vec4 z,vec3 c,inout vec3 color){
@@ -153,7 +153,7 @@ vec2 intersect(in vec3 ro, in vec3 rd, in float maxdist)
     float dist = 0.0;
     for(int i = 0; i < 800; i ++ )
     {
-        if(i==render_count) break;
+        if (i == render_count)break;
         vec3 rayP = ro + dist * rd;
         float mapDist = map(rayP);
         if (mapDist < (scaleEpsilon * dist + detail)||dist > maxdist) {
@@ -174,7 +174,7 @@ float softshadow(vec3 ro, vec3 rd, float k) {
         }
         h = map(ro + rd * t);
         if (h < 0.0001)return.02;
-        akuma = min(akuma, k * h /t);
+        akuma = min(akuma, k * h / t);
         t += h;
     }
     return akuma;
@@ -204,33 +204,31 @@ vec3 calcNormal(vec3 p, float e) {
     //     z.xyz=z.xyz*2.-pos;
 // }
 
-vec3 map_color(vec3 pos) {
-    vec4 z = vec4(pos, 1.0);
-    INSERTCOLORHERE
-    return vec3(48./255.,204./255.,0.);
-}
-
 vec3 hsv2rgb(vec3 c) {
     vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
     vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
     return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
 }
 
-// vec3 orbit_trap(vec3 pos){
-    //     float orbit=1000.;
-    //     vec4 z=vec4(pos,1.);
-    //     for(int n=0;n<25;++n){
-        //         if(n==recursions)break;
-        //         box_fold(z);
-        //         sphere_fold(z);
-        //         z.xyz=scale*z.xyz+pos;
-        //         z.w=z.w*abs(scale)+1.;
-        //         orbit=min(orbit,abs(length(z.xyz)/pow(scale,float(n))));
-    //     }
-    //     //orbit = floor(orbit);
-    
-    //     return hsv2rgb(vec3(orbit*10.,.5,.5));
-// }
+vec3 orbit_trap(vec3 pos) {
+    float orbit = 1000.0;
+    vec4 z = vec4(pos, 1.0);
+    for(int n = 0; n < 4; ++ n) {
+        box_fold(z, 1.0);
+        sphere_fold(z, 0.0, 1.0);
+        z.xyz = -2.0 * z.xyz + pos;
+        z.w = z.w * abs(-2.0) + 1.0;
+        orbit = min(orbit, abs(length(z.xyz) / z.w));
+    }
+    return hsv2rgb(vec3(orbit * 10.0, 0.5, 0.5));
+}
+
+vec3 map_color(vec3 pos) {
+    float orbit = 1000.0;
+    vec4 z = vec4(pos, 1.0);
+    INSERTCOLORHERE
+    //return vec3(48.0 / 255.0, 204.0 / 255.0, 0.0);
+}
 
 vec3 render(in vec3 ro, in vec3 rd, bool effect)
 {
