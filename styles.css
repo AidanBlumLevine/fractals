@@ -161,6 +161,24 @@ html {
   font-weight: 600;
   white-space: nowrap;
 }
+.codeblock-list-blabel{
+  border: 1px solid #151515;
+  border-radius: 0px 0px 10px 10px;
+  background-color: #151515;
+  color: white;
+  margin-top: -10px;
+  margin-bottom: .5rem;
+  padding-bottom: .25rem;
+  padding-top: .75rem;
+  overflow: hidden;
+  font-size: 15px;
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+  z-index: 10;
+  display: flex;
+  justify-content: space-around;
+}
 
 .codeblock-list,
 .codeblock-list-master {
@@ -174,6 +192,7 @@ html {
   margin-bottom: .25rem;
   overflow: hidden;
   align-items: flex-start;
+  z-index: 11;
 }
 .icon-list{
   display: flex;

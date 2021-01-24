@@ -26,7 +26,7 @@
                     <div class="list-button active" data-fractal="FC10FA1,1,1,3FEFB,,,1,1,1">Menger Sponge</div>
                     <div class="list-button" data-fractal="FC8FH2FO.1,1.9FM-2.8FEFB0,0,0,5,5,5">Mandelbox</div>
                     <div class="list-button" data-fractal="FC8FH1FO.1,1.9FM-2.8FEFB0,0,0,5,5,5">Mandelball</div>
-                    <div class="list-button" data-fractal="">Sponge Hybrid</div>
+                    <div class="list-button" data-fractal="FC3FH1FO.1,1FM-2FEFR45,0,FA1,1,1,4FR-45,59,FC12FQ.9FH2FO.1,2FM-3FEFB,15,,5,5,5">Hybrid 1</div>
                     <div class="list-button" data-fractal="">Custom</div>
                 </div>
                 <div class="title">Performance Settings</div>
@@ -41,6 +41,10 @@
                         <div class="rangelabel">detail scale</div>
                         <input type="range" min="2" max="8" value="6" step="0.01" id="detail"></input>
                     </div>
+                    <div class="rangewrapper">
+                        <div class="rangelabel">render steps</div>
+                        <input type="range" min="50" max="800" value="100" id="render"></input>
+                    </div>
                     <div class="text p-top">fps:&nbsp;<span id="fps"></span></div>
                 </div>
             </div>
@@ -49,6 +53,14 @@
                     <div class='codeblock-list-label'>Fractal equation</div>
                     <div id='fractal' class="codeblock-list">
 
+                    </div>
+                    <div class='codeblock-list-blabel'>
+                        Draw Region
+                        <div class="codeblock-vector" id="draw-region">
+                            <input class="codeblock-vectorval x" placeholder="x" value="1">
+                            <input class="codeblock-vectorval y" placeholder="y" value="1">
+                            <input class="codeblock-vectorval z" placeholder="z" value="1">
+                        </div>
                     </div>
                     <div class='codeblock-list-label p-top'>Coloring equation</div>
                     <div id='color' class="codeblock-list">
@@ -74,7 +86,7 @@
                                 <input class="codeblock-vectorval z" placeholder="z">
                             </div>
                         </div>
-                        <div class="codeblock master" data-name="Box">
+                        <!-- <div class="codeblock master" data-name="Box">
                             <span class="codeblock-title" draggable="false">Box</span>
                             <div class="codeblock-vector" data-tip="box center">
                                 <input class="codeblock-vectorval x" placeholder="x">
@@ -95,10 +107,14 @@
                                 <input class="codeblock-vectorval z" placeholder="z">
                             </div>
                             <input class="codeblock-numfield vwide" placeholder="radius">
-                        </div>
+                        </div> -->
                         <div class="codeblock master" data-name="Box_Fold">
                             <span class="codeblock-title" draggable="false">Box Fold</span>
                             <input class="codeblock-numfield wide" placeholder="limit">
+                        </div>
+                        <div class="codeblock master" data-name="Scale">
+                            <span class="codeblock-title" draggable="false">Scale</span>
+                            <input class="codeblock-numfield wide" placeholder="scale">
                         </div>
                         <div class="codeblock master" data-name="Sphere_Fold">
                             <span class="codeblock-title" draggable="false">Sphere Fold</span>
@@ -124,6 +140,9 @@
                                 <input class="codeblock-numfield wide" placeholder="count">
                             </div>
                             <div class="codeblock-list-master inner"></div>
+                        </div>
+                        <div class="codeblock master" data-name="Tetrahedral">
+                            <span class="codeblock-title" draggable="false">Tetrahedral</span>
                         </div>
                     </div>
                     <div class=codeblock-list-label>Toolbox</div>

@@ -9,10 +9,10 @@ uniform vec3 playerUp;
 uniform vec2 resolution;
 
 uniform int shadow_count;
+uniform int render_count;
 uniform float detail;
 
 const float scaleEpsilon = 0.001;
-const int steps = 100;
 
 float box(vec3 p, vec3 center, vec3 b)
 {
@@ -77,7 +77,9 @@ void rotate(inout vec4 z, vec3 angle){
 void translate(inout vec4 z, vec3 transform){
     z.xyz += transform;
 }
-
+void scale(inout vec4 z, float transform){
+    z *= transform;
+}
 void tetrahedral(inout vec4 z) {
     if (z.x + z.y < 0.0)z.xy =- z.yx; // fold 1
     if (z.x + z.z < 0.0)z.xz =- z.zx; // fold 2
@@ -149,8 +151,9 @@ float map(vec3 pos) {
 vec2 intersect(in vec3 ro, in vec3 rd, in float maxdist)
 {
     float dist = 0.0;
-    for(int i = 0; i < steps; i ++ )
+    for(int i = 0; i < 800; i ++ )
     {
+        if(i==render_count) break;
         vec3 rayP = ro + dist * rd;
         float mapDist = map(rayP);
         if (mapDist < (scaleEpsilon * dist + detail)||dist > maxdist) {
@@ -158,7 +161,7 @@ vec2 intersect(in vec3 ro, in vec3 rd, in float maxdist)
         }
         dist += mapDist;
     }
-    return vec2(dist, steps);
+    return vec2(dist, render_count);
 }
 
 //not mine------
@@ -239,14 +242,14 @@ vec3 render(in vec3 ro, in vec3 rd, bool effect)
     
     vec3 color = map_color(ro + rd * dist);
     
-    if (dist > 1024.0||int(rayData.y) == steps) {
+    if (dist > 1024.0||int(rayData.y) == render_count) {
         return vec3(0.91, 0.91, 0.76) + vec3(smoothstep(0.98, 1.0, dot(rd, - normalize(light))));
     }
     
     vec3 normal = calcNormal(ro + dist * rd, scaleEpsilon * dist + detail);
     float specular = pow(dot(-normalize(rd), reflect(normalize(light), normal)), 32.0);
     
-    float distOcclusion = 1.0 - rayData.y / float(steps); //hacky occlusion, more occlusion means higher number
+    float distOcclusion = 1.0 - rayData.y / float(render_count); //hacky occlusion, more occlusion means higher number
     float diffuseLighting = 1.0 - clamp(dot(light, normal), 0.0, 1.0);
     
     float shadow = softshadow(ro + dist * rd, - light, 10.0);

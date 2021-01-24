@@ -42,17 +42,21 @@ var playerRight_location;
 var time_location;
 var detail_location;
 var shadow_location;
+var render_location;
 var vShader = gl.createShader(gl.VERTEX_SHADER);
 gl.shaderSource(vShader, vert);
 gl.compileShader(vShader);
 function run() {
     var fractal = codify($('#fractal'));
-    console.log(fractal);
+    var d = $('#draw-region').children().eq(0).val() + ',' + $('#draw-region').children().eq(1).val() + ',' + $('#draw-region').children().eq(2).val();
+    d = toFloats(d.split(','));
+    fractal += `return box(z.xyz,vec3(0),vec3(${d[0]},${d[1]},${d[2]}))/abs(z.w);\n`;
+    //console.log(fractal);
     var color = codify($('#color'));
-    console.log(color);
+    //console.log(color);
     var Nfrag = frag.replace('INSERTFRACTALHERE', fractal);
     Nfrag = Nfrag.replace('INSERTCOLORHERE', color);
-    console.log(Nfrag);
+    //console.log(Nfrag);
     //var program = gl.createProgram();
     var fShader = gl.createShader(gl.FRAGMENT_SHADER);
     gl.shaderSource(fShader, Nfrag);
@@ -76,8 +80,11 @@ function run() {
     time_location = gl.getUniformLocation(program, "time");
     shadow_location = gl.getUniformLocation(program, "shadow_count");
     detail_location = gl.getUniformLocation(program, "detail");
-    gl.uniform1f(detail_location, Math.pow(10, -6));
-    gl.uniform1i(shadow_location, 0);
+    render_location = gl.getUniformLocation(program, "render_count");
+    gl.uniform1f(detail_location, Math.pow(10, -$('#detail').val()));
+    gl.uniform1i(shadow_location, $('#shadow').val());
+    gl.uniform1i(render_location, $('#render').val());
+    console.log($('#render').val());
     var buffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1.0, -1.0, 1.0, -1.0, -1.0, 1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0]), gl.STATIC_DRAW);
@@ -89,7 +96,8 @@ function run() {
 function save() {
     var encodedFractal = encodeList($('#fractal'));
     var encodedColor = encodeList($('#color'));
-    window.history.replaceState(null, null, "?fractal=" + encodedFractal + "&color=" + encodedColor);
+    var d = $('#draw-region').children().eq(0).val() + ',' + $('#draw-region').children().eq(1).val() + ',' + $('#draw-region').children().eq(2).val();
+    window.history.replaceState(null, null, "?fractal=" + encodedFractal + "&draw="+d + "&color=" + encodedColor);
 }
 
 function makeTextChangesSave() {
@@ -97,6 +105,7 @@ function makeTextChangesSave() {
         save();
     });
 }
+makeTextChangesSave();
 
 function encodeList(node) {
     var encoded = '';
@@ -147,6 +156,12 @@ function encodeNode(node) {
             break;
         case 'Menger':
             encoded = 'FA' + encodeVector(children.eq(1)) + ',' + children.eq(2).val();
+            break;
+        case 'Tetrahedral':
+            encoded = 'FW';
+            break;
+        case 'Scale':
+            encoded = 'FQ' + children.eq(1).val();
             break;
     }
     return encoded;
@@ -199,6 +214,13 @@ function decodeSave(saved, parentNode) {
                 newNode = $(".master[data-name='Menger']").clone().removeClass("master");
                 decodeVector(newNode.children().eq(1), f.substring(1).split(','));
                 newNode.children().eq(2).val(f.substring(1).split(',')[3]);
+                break;
+            case 'W':
+                newNode = $(".master[data-name='Tetrahedral']").clone().removeClass("master");
+                break;
+            case 'Q':
+                newNode = $(".master[data-name='Scale']").clone().removeClass("master");
+                newNode.children().eq(1).val(f.substring(1));
                 break;
         }
         if (newNode != null) {
@@ -266,6 +288,12 @@ function codify(node) {
                 break;
             case 'A':
                 code += `menger(z,vec3(${f[0]},${f[1]},${f[2]}),${f[3]});\n`;
+                break;
+            case 'W':
+                code += `tetrahedral(z);\n`;
+                break;
+            case 'Q':
+                code += `scale(z,${f[0]});\n`;
                 break;
         }
     }
@@ -410,6 +438,10 @@ if (params.fractal == undefined) {
 } else {
     decodeSave(params.fractal, $('#fractal'));
     decodeSave(params.color, $('#color'));
+    var d = params.draw.split(',');
+    $('#draw-region').children().eq(0).val(d[0]);
+    $('#draw-region').children().eq(1).val(d[1]);
+    $('#draw-region').children().eq(2).val(d[2]);
     run();
 }
 
@@ -476,7 +508,9 @@ document.getElementById("detail").addEventListener('input', function () {
 document.getElementById("shadow").addEventListener('input', function () {
     gl.uniform1i(shadow_location, parseInt(document.getElementById("shadow").value));
 });
-
+document.getElementById("render").addEventListener('input', function () {
+    gl.uniform1i(render_location, parseInt(document.getElementById("render").value));
+});
 window.addEventListener("keydown", onKeyDown, false);
 window.addEventListener("keyup", onKeyUp, false);
 function onKeyDown(event) {
