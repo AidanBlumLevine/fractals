@@ -7,7 +7,7 @@ var yawAngle = 0, pitchAngle = 0;
 var playerPos = vec3.fromValues(0, 0, -4);
 var move = [0, 0, 0];
 var speed = 3;
-
+var saveTimer = 1;
 var canvas = $("#canvas")[0];
 var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
 
@@ -93,10 +93,13 @@ function run() {
 }
 
 function save() {
-    var encodedFractal = encodeList($('#fractal'));
-    var encodedColor = encodeList($('#color'));
-    var d = $('#draw-region').children().eq(0).val() + ',' + $('#draw-region').children().eq(1).val() + ',' + $('#draw-region').children().eq(2).val();
-    window.history.replaceState(null, null, "?fractal=" + encodedFractal + "&draw=" + d + "&color=" + encodedColor);
+    if (saveTimer >= 1) {
+        saveTimer = 0;
+        var encodedFractal = encodeList($('#fractal'));
+        var encodedColor = encodeList($('#color'));
+        var d = $('#draw-region').children().eq(0).val() + ',' + $('#draw-region').children().eq(1).val() + ',' + $('#draw-region').children().eq(2).val();
+        window.history.replaceState(null, null, "?fractal=" + encodedFractal + "&draw=" + d + "&color=" + encodedColor);
+    }
 }
 
 function makeTextChangesSave() {
@@ -311,8 +314,8 @@ function codify(node) {
                 code += `for(int i = 0; i < ${i[0]}; i++){\n`;
                 break;
             case 'X':
-                code += `orbit = min(orbit, abs(length(z.xyz) / z.w));}\n`;
-                code += `return hsv2rgb(vec3(orbit * ${f[0]}, 0.5, 0.5));`;
+                code += `orbit = min(orbit, length(z.xyz));}\n`;
+                code += `return hsv2rgb(vec3(abs(orbit / z.w) * ${f[0]}, 0.5, 0.5));`;
                 break;
         }
     }
@@ -450,10 +453,28 @@ $(document).keyup(function (e) {
 });
 
 //LOAD SHADER=====================================
+function loadFromButton() {
+    $('#fractal').html('');
+    $('#color').html('');
+    decodeSave($('.list-button.active').data('fractal'), $('#fractal'));
+    decodeSave($('.list-button.active').data('color'), $('#color'));
+    var d = $('.list-button.active').data('draw');
+    if (d != undefined) {
+        d = d.split(',');
+        $('#draw-region').children().eq(0).val(d[0]);
+        $('#draw-region').children().eq(1).val(d[1]);
+        $('#draw-region').children().eq(2).val(d[2]);
+    }
+    save();
+    run();
+}
+$('.list-button').click(function () {
+    loadFromButton();
+});
 var params = {};
 location.search.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (s, k, v) { params[k] = v })
 if (params.fractal == undefined) {
-    //$('.list-button.active').data('code');
+    loadFromButton();
 } else {
     decodeSave(params.fractal, $('#fractal'));
     decodeSave(params.color, $('#color'));
@@ -598,6 +619,7 @@ var lastFrame = start;
 function render() {
     var current = Date.now();
     var elapsed = current - lastFrame;
+    saveTimer += elapsed;
     lastFrame = current;
     gl.uniform1f(time_location, current - start);
     movement(elapsed / 1000);

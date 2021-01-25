@@ -227,7 +227,8 @@ vec3 map_color(vec3 pos) {
     float orbit = 1000.0;
     vec4 z = vec4(pos, 1.0);
     INSERTCOLORHERE
-    //return vec3(48.0 / 255.0, 204.0 / 255.0, 0.0);
+    //backup
+    return vec3(48.0 / 255.0, 204.0 / 255.0, 0.0);
 }
 
 vec3 render(in vec3 ro, in vec3 rd, bool effect)
