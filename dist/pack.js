@@ -46,7 +46,7 @@ eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpac
   \****************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
-eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => __WEBPACK_DEFAULT_EXPORT__\n/* harmony export */ });\n/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (\"attribute vec2 position;\\nvarying vec2 surf_pos;\\nuniform vec2 screen_ratio;\\nvoid main()\\n{\\n    surf_pos = position * screen_ratio;\\n    gl_Position = vec4(position, 0, 1);\\n}\");\n\n//# sourceURL=webpack://fractals/./src/generalVert.vs?");
+eval("__webpack_require__.r(__webpack_exports__);\n/* harmony export */ __webpack_require__.d(__webpack_exports__, {\n/* harmony export */   \"default\": () => __WEBPACK_DEFAULT_EXPORT__\n/* harmony export */ });\n/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (\"attribute vec2 position;\\r\\nvarying vec2 surf_pos;\\r\\nuniform vec2 screen_ratio;\\r\\nvoid main()\\r\\n{\\r\\n    surf_pos = position * screen_ratio;\\r\\n    gl_Position = vec4(position, 0, 1);\\r\\n}\");\n\n//# sourceURL=webpack://fractals/./src/generalVert.vs?");
 
 /***/ }),
 
