@@ -156,6 +156,9 @@ function encodeNode(node) {
         case 'Mandel':
             encoded = 'FM' + children.eq(1).val();
             break;
+        case 'Sierpinski':
+            encoded = 'FS' + children.eq(1).val();
+            break;
         case 'Menger':
             encoded = 'FA' + encodeVector(children.eq(1)) + ',' + children.eq(2).val();
             break;
@@ -214,6 +217,10 @@ function decodeSave(saved, parentNode) {
                 break;
             case 'M':
                 newNode = $(".master[data-name='Mandel']").clone().removeClass("master");
+                newNode.children().eq(1).val(f.substring(1));
+                break;
+            case 'S':
+                newNode = $(".master[data-name='Sierpinski']").clone().removeClass("master");
                 newNode.children().eq(1).val(f.substring(1));
                 break;
             case 'A':
@@ -300,6 +307,9 @@ function codify(node) {
                 break;
             case 'M':
                 code += `mandel(z,pos,${f[0]});\n`;
+                break;
+            case 'S':
+                code += `sierpinski(z,${f[0]});\n`;
                 break;
             case 'A':
                 code += `menger(z,vec3(${f[0]},${f[1]},${f[2]}),${f[3]});\n`;
