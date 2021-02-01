@@ -28,9 +28,27 @@ float sphere(vec3 p,vec3 center,float s)
 void sphere_fold(inout vec4 z,float min_radius,float fixed_radius){
     z*=fixed_radius/clamp(dot(z.xyz,z.xyz),min_radius,fixed_radius);
 }
+void sphere_fold_c(inout vec4 z,float min_radius,float fixed_radius,inout vec3 color){
+    float r2=dot(z.xyz,z.xyz);
+    color+=vec3(0,-.25,.15);
+    if(r2<min_radius){
+        z*=(fixed_radius/min_radius);
+        color+=vec3(0,2.25,1.75);
+    }else if(r2<fixed_radius){
+        z*=(fixed_radius/r2);
+        color+=vec3(.45,.6,2.2);
+    }
+}
 
 void box_fold(inout vec4 z,float folding_limit){
     z.xyz=clamp(z.xyz,-folding_limit,folding_limit)*2.-z.xyz;
+}
+
+void box_fold_c(inout vec4 z,float folding_limit,inout vec3 color){
+    vec3 pos=z.xyz;
+    z.xyz=clamp(z.xyz,-folding_limit,folding_limit);
+    color.x+=pos==z.xyz?8./1.5:0.;
+    z.xyz=z.xyz*2.-pos;
 }
 
 void shiftXY(inout vec4 z,float angle,float radius){
@@ -122,7 +140,7 @@ void menger(inout vec4 z,vec3 c,float scale){
 }
 
 void sierpinski(inout vec4 z,float scale){
-    z=scale*z-vec4(vec3(scale-1.0),0.);
+    z=scale*z-vec4(vec3(scale-1.),0.);
 }
 
 // void menger_c(inout vec4 z,vec3 c,inout vec3 color){
@@ -229,6 +247,7 @@ vec3 orbit_trap(vec3 pos){
 
 vec3 map_color(vec3 pos){
     float orbit=1000.;
+    vec3 color=vec3(0);
     vec4 z=vec4(pos,1.);
     INSERTCOLORHERE
     //backup

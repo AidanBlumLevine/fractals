@@ -172,6 +172,16 @@ function encodeNode(node) {
             encoded = 'FB' + children.eq(0).children().eq(1).val() + ',' + children.eq(0).children().eq(2).val();
             encoded += encodeList(children.eq(1)) + 'FX' + children.eq(0).children().eq(2).val();
             break;
+        case 'Color_Tally':
+            encoded = 'FN' + children.eq(0).children().eq(1).val();
+            encoded += encodeList(children.eq(1)) + 'FV' + children.eq(0).children().eq(1).val();
+            break;
+        case 'Box_Fold_Color':
+            encoded = 'FL' + children.eq(1).val();
+            break;
+        case 'Sphere_Fold_Color':
+            encoded = 'FD' + children.eq(1).val() + ',' + children.eq(2).val();
+            break;
     }
     return encoded;
 }
@@ -243,6 +253,23 @@ function decodeSave(saved, parentNode) {
                 break;
             case 'X':
                 nextParentNode = parentNode.parent().closest('.codeblock-list');
+                break;
+            case 'N':
+                newNode = $(".master[data-name='Color_Tally']").clone().removeClass("master");
+                newNode.children().eq(0).children().eq(1).val(f.substring(1).split(',')[0]);
+                nextParentNode = newNode.find(".codeblock-list-master").removeClass("codeblock-list-master").addClass("codeblock-list");
+                break;
+            case 'V':
+                nextParentNode = parentNode.parent().closest('.codeblock-list');
+                break;
+            case 'L':
+                newNode = $(".master[data-name='Box_Fold_Color']").clone().removeClass("master");
+                newNode.children().eq(1).val(f.substring(1));
+                break;
+            case 'D':
+                newNode = $(".master[data-name='Sphere_Fold_Color']").clone().removeClass("master");
+                newNode.children().eq(1).val(f.substring(1).split(',')[0]);
+                newNode.children().eq(2).val(f.substring(1).split(',')[1]);
                 break;
         }
         if (newNode != null) {
@@ -326,6 +353,20 @@ function codify(node) {
             case 'X':
                 code += `orbit = min(orbit, length(z.xyz));}\n`;
                 code += `return hsv2rgb(vec3(abs(orbit / z.w) * ${f[0]}, 0.5, 0.5));`;
+                break;
+            case 'N':
+                code += `vec3 surface=vec3(0,${f[0]}/2.,0);`;
+                code += `for(int i = 0; i < ${i[0]}; i++){\n`;
+                break;
+            case 'V':
+                code += `}\n`;
+                code += `return surface/${f[0]};`;
+                break;
+            case 'L':
+                code += `box_fold_c(z,${f[0]},surface);\n`;
+                break;
+            case 'D':
+                code += `sphere_fold_c(z,${f[0]},${f[1]},surface);\n`;
                 break;
         }
     }
