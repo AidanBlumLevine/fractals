@@ -143,27 +143,24 @@ void sierpinski(inout vec4 z,float scale){
     z=scale*z-vec4(vec3(scale-1.),0.);
 }
 
-// void menger_c(inout vec4 z,vec3 c,inout vec3 color){
-    //     rotateX(z,3.14159/3.);
-    //     z=abs(z);
-    //     if(z.x-z.y<0.){z.xy=z.yx;}
-    //     if(z.x-z.z<0.){z.xz=z.zx;}
-    //     if(z.y-z.z<0.){z.yz=z.zy;}
+void menger_c(inout vec4 z,vec3 c,float scale, inout vec3 color){
+        z=abs(z);
+        if(z.x-z.y<0.){z.xy=z.yx;}
+        if(z.x-z.z<0.){z.xz=z.zx;}
+        if(z.y-z.z<0.){z.yz=z.zy;}
     
-    //     z.z-=.5*c.z*(scale-1.)/scale;
-    //     float ozz=z.z;
-    //     z.z=-abs(-z.z);
-    //     if(ozz>z.z){
-        //         color.x++;
-    //     }
-    //     rotateZ(z,3.14159/60.);
-    //     rotateX(z,3.14159/30.);
-    
-    //     z.z+=.5*c.z*(scale-1.)/scale;
-    //     z*=scale;
-    //     z.x-=c.x*(scale-1.);
-    //     z.y-=c.y*(scale-1.);
-// }
+        z.z-=.5*c.z*(scale-1.)/scale;
+        float ozz=z.z;
+        z.z=-abs(-z.z);
+        if(ozz>z.z){
+                color.x++;
+                color.y--;
+        }
+        z.z+=.5*c.z*(scale-1.)/scale;
+        z*=scale;
+        z.x-=c.x*(scale-1.);
+        z.y-=c.y*(scale-1.);
+}
 
 float map(vec3 pos){
     vec4 z=vec4(pos,1.);

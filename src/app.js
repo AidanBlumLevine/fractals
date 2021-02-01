@@ -182,6 +182,9 @@ function encodeNode(node) {
         case 'Sphere_Fold_Color':
             encoded = 'FD' + children.eq(1).val() + ',' + children.eq(2).val();
             break;
+        case 'Hybrid_1_Color':
+            encoded = 'FZ';
+            break;
     }
     return encoded;
 }
@@ -270,6 +273,9 @@ function decodeSave(saved, parentNode) {
                 newNode = $(".master[data-name='Sphere_Fold_Color']").clone().removeClass("master");
                 newNode.children().eq(1).val(f.substring(1).split(',')[0]);
                 newNode.children().eq(2).val(f.substring(1).split(',')[1]);
+                break;
+            case 'Z':
+                newNode = $(".master[data-name='Hybrid_1_Color']").clone().removeClass("master").show();
                 break;
         }
         if (newNode != null) {
@@ -367,6 +373,25 @@ function codify(node) {
                 break;
             case 'D':
                 code += `sphere_fold_c(z,${f[0]},${f[1]},surface);\n`;
+                break;
+            case 'Z':
+                code += `vec3 surface=vec3(0,15.0/2.0,0);
+                        for(int i = 0; i < 3; i++){
+                            box_fold_c(z, 1.0, surface);
+                            sphere_fold_c(z,.1,1.0,surface);
+                            mandel(z,pos,-2.0);
+                        }
+                        rotate(z,vec3(45.0 * 0.0174533,0.0,0.0));
+                        menger_c(z,vec3(1.0,1.0,1.0),4.0,surface);
+                        rotate(z,vec3(-45.0 * 0.0174533,59.0 * 0.0174533,0.0));
+                        for(int i = 0; i < 12; i++){
+                            scale(z,.9);
+                            box_fold_c(z, 2.0, surface);
+                            sphere_fold_c(z,.1,2.0,surface);
+                            mandel(z,pos,-3.0);
+                        }
+                        return surface/12.0;
+                        `
                 break;
         }
     }
