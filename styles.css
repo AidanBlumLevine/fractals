@@ -88,6 +88,7 @@ html {
 #right-edge {
   margin-top: auto;
   margin-bottom: auto;
+  z-index: 1000;
 }
 
 #expand-button {
