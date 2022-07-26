@@ -12,6 +12,11 @@ html {
   overflow: hidden;
 }
 
+a{
+    color: #4b8ffa;
+    margin-bottom: 1rem;
+}
+
 .indicator {
   pointer-events: none;
   border-radius: 7px;
