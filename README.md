@@ -12,3 +12,5 @@ For more info on how the renderer works, see [this link](https://michaelwalczyk.
 To learn about how these blocks combine to make fractals, see [here](https://iquilezles.org/articles/menger/)
 
 ![preview image](https://github.com/AidanBlumLevine/fractals/blob/main/preview.png)
+
+*Dont know where to start?* Try adding a slight rotation (5-10 degrees) to the basic Menger Sponge.
