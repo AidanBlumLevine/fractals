@@ -3,7 +3,7 @@ A fun fractal factory - use the block based editor to build and explore amazing 
 
 The only limit is your imagination (and floating point number precision ☹️)
 
-try it out [here](https://aidanblumlevine.github.io/fractals/)
+**try it out [here](https://aidanblumlevine.github.io/fractals/)**
 
 For more info on how the renderer works, see [this link](https://michaelwalczyk.com/blog-ray-marching.html)
 
