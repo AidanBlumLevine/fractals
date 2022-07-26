@@ -14,3 +14,8 @@ To learn about how these blocks combine to make fractals, see [here](https://iqu
 ![preview image](https://github.com/AidanBlumLevine/fractals/blob/main/preview.png)
 
 *Dont know where to start?* Try adding a slight rotation (5-10 degrees) to the basic Menger Sponge.
+
+![preview image](https://github.com/AidanBlumLevine/fractals/blob/main/fractal_beam.png)
+![preview image](https://github.com/AidanBlumLevine/fractals/blob/main/fractal_sponge.png)
+![preview image](https://github.com/AidanBlumLevine/fractals/blob/main/fractal_sphere.png)
+![preview image](https://github.com/AidanBlumLevine/fractals/blob/main/fractal_crystals.png)
