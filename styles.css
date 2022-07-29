@@ -12,6 +12,11 @@ html {
   overflow: hidden;
 }
 
+a{
+    color: #4b8ffa;
+    margin-bottom: 1rem;
+}
+
 .indicator {
   pointer-events: none;
   border-radius: 7px;
@@ -88,6 +93,7 @@ html {
 #right-edge {
   margin-top: auto;
   margin-bottom: auto;
+  z-index: 1000;
 }
 
 #expand-button {
