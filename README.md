@@ -3,7 +3,7 @@ A fun fractal factory - use the block based editor to build and explore amazing 
 
 **try it out [here](https://aidanblumlevine.github.io/fractals/)**
 
-**Instructions:** Use the WASD keys to move and your mouse to look around. Change your move speed with the slider on the left or by scrolling (as you get closer to a surface, decrease your move speed to explore finer details). Your creations are encoded into current url, so just copy it to share or save them!
+**Instructions:** Use the WASD keys to move and your mouse to look around. Change your move speed with the slider on the left or by scrolling (as you get closer to a surface, decrease your move speed to explore finer details). Your creations are encoded in the current url, so just copy it to share or save them!
 
 For more info on how the renderer works, see [this link](https://michaelwalczyk.com/blog-ray-marching.html)
 
