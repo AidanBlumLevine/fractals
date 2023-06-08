@@ -152,7 +152,14 @@ a{
   margin-bottom: 0.25rem;
 }
 .title.big{
-  font-size: 30px;
+  font-size: 25px;
+  display:flex;
+  align-items:center;
+}
+.title img {
+  width:40px;
+  height:40px;
+  margin-right: .5rem;
 }
 
 .codeblock-list-label{
